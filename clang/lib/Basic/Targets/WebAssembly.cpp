@@ -90,6 +90,7 @@ void WebAssemblyTargetInfo::getTargetDefines(const LangOptions &Opts,
     Builder.defineMacro("__wasm_tail_call__");
   if (HasReferenceTypes)
     Builder.defineMacro("__wasm_reference_types__");
+  Builder.defineMacro("__linux__");
 }
 
 void WebAssemblyTargetInfo::setSIMDLevel(llvm::StringMap<bool> &Features,
