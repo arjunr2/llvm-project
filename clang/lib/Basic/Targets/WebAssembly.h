@@ -75,15 +75,16 @@ public:
     SuitableAlign = 128;
     LargeArrayMinWidth = 128;
     LargeArrayAlign = 128;
-    SigAtomicType = SignedLong;
+    SigAtomicType = SignedInt;
+    LongAlign = LongWidth = 64;
     LongDoubleWidth = LongDoubleAlign = 128;
     LongDoubleFormat = &llvm::APFloat::IEEEquad();
     MaxAtomicPromoteWidth = MaxAtomicInlineWidth = 64;
     // size_t being unsigned long for both wasm32 and wasm64 makes mangled names
     // more consistent between the two.
-    SizeType = UnsignedLong;
-    PtrDiffType = SignedLong;
-    IntPtrType = SignedLong;
+    SizeType = UnsignedInt;
+    PtrDiffType = SignedInt;
+    IntPtrType = SignedInt;
   }
 
   StringRef getABI() const override;
