@@ -591,6 +591,16 @@ struct WasmSym {
   // (normally an alias of initMemory, or applyGlobalRelocs).
   static DefinedFunction *startFunction;
 
+  // __wasm_memory_grow
+  // Function to perform memory grow within wasm, relieving engine
+  // APIs from performing this internally
+  static DefinedFunction *memoryGrow;
+
+  // __wasm_memory_size
+  // Function to perform memory size within wasm, relieving engine
+  // APIs from performing this internally
+  static DefinedFunction *memorySize;
+
   // __dso_handle
   // Symbol used in calls to __cxa_atexit to determine current DLL
   static DefinedData *dsoHandle;
