@@ -76,6 +76,8 @@ namespace wasm {
 DefinedFunction *WasmSym::callCtors;
 DefinedFunction *WasmSym::callDtors;
 DefinedFunction *WasmSym::initMemory;
+DefinedFunction *WasmSym::memoryGrow;
+DefinedFunction *WasmSym::memorySize;
 DefinedFunction *WasmSym::applyDataRelocs;
 DefinedFunction *WasmSym::applyGlobalRelocs;
 DefinedFunction *WasmSym::applyTLSRelocs;
@@ -306,6 +308,14 @@ DefinedFunction::DefinedFunction(StringRef name, uint32_t flags, InputFile *f,
 
 uint32_t DefinedFunction::getExportedFunctionIndex() const {
   return function->getFunctionIndex();
+}
+
+void DefinedFunction::setExportNoWrap(bool v) {
+  exportNoWrap = v;
+}
+
+bool DefinedFunction::getExportNoWrap() const {
+  return exportNoWrap;
 }
 
 uint64_t DefinedData::getVA() const {

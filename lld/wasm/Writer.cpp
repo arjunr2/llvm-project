@@ -65,6 +65,8 @@ private:
 
   void createSyntheticInitFunctions();
   void createInitMemoryFunction();
+  void createMemoryGrowFunction();
+  void createMemorySizeFunction();
   void createStartFunction();
   void createApplyDataRelocationsFunction();
   void createApplyGlobalRelocationsFunction();
@@ -888,31 +890,33 @@ void Writer::createCommandExportWrappers() {
         toWrap.push_back(f);
 
   for (auto *f : toWrap) {
-    auto funcNameStr = (f->getName() + ".command_export").str();
-    commandExportWrapperNames.push_back(funcNameStr);
-    const std::string &funcName = commandExportWrapperNames.back();
+    if (!(f->getExportNoWrap())) { 
+      auto funcNameStr = (f->getName() + ".command_export").str();
+      commandExportWrapperNames.push_back(funcNameStr);
+      const std::string &funcName = commandExportWrapperNames.back();
 
-    auto func = make<SyntheticFunction>(*f->getSignature(), funcName);
-    if (f->function->getExportName())
-      func->setExportName(f->function->getExportName()->str());
-    else
-      func->setExportName(f->getName().str());
+      auto func = make<SyntheticFunction>(*f->getSignature(), funcName);
+      if (f->function->getExportName())
+        func->setExportName(f->function->getExportName()->str());
+      else
+        func->setExportName(f->getName().str());
 
-    DefinedFunction *def =
-        symtab->addSyntheticFunction(funcName, f->flags, func);
-    def->markLive();
+      DefinedFunction *def =
+          symtab->addSyntheticFunction(funcName, f->flags, func);
+      def->markLive();
 
-    def->flags |= WASM_SYMBOL_EXPORTED;
-    def->flags &= ~WASM_SYMBOL_VISIBILITY_HIDDEN;
-    def->forceExport = f->forceExport;
+      def->flags |= WASM_SYMBOL_EXPORTED;
+      def->flags &= ~WASM_SYMBOL_VISIBILITY_HIDDEN;
+      def->forceExport = f->forceExport;
 
-    f->flags |= WASM_SYMBOL_VISIBILITY_HIDDEN;
-    f->flags &= ~WASM_SYMBOL_EXPORTED;
-    f->forceExport = false;
+      f->flags |= WASM_SYMBOL_VISIBILITY_HIDDEN;
+      f->flags &= ~WASM_SYMBOL_EXPORTED;
+      f->forceExport = false;
 
-    out.functionSec->addFunction(func);
+      out.functionSec->addFunction(func);
 
-    createCommandExportWrapper(f->getFunctionIndex(), def);
+      createCommandExportWrapper(f->getFunctionIndex(), def);
+    }
   }
 }
 
@@ -1129,6 +1133,8 @@ void Writer::createSyntheticInitFunctions() {
     return;
 
   static WasmSignature nullSignature = {{}, {}};
+  static WasmSignature memoryGrowSignature = {{ValType::I32}, {ValType::I32}};
+  static WasmSignature memorySizeSignature = {{ValType::I32}, {}};
 
   // Passive segments are used to avoid memory being reinitialized on each
   // thread's instantiation. These passive segments are initialized and
@@ -1146,6 +1152,23 @@ void Writer::createSyntheticInitFunctions() {
       WasmSym::tlsBase->markLive();
     }
   }
+
+  /* Add WALI convenience memory grow/size hook */
+  auto memoryGrowFunc = make<SyntheticFunction>(memoryGrowSignature, "__wasm_memory_grow");
+  memoryGrowFunc->setExportName("wasm_memory_grow");
+  WasmSym::memoryGrow = symtab->addSyntheticFunction(
+      "__wasm_memory_grow", WASM_SYMBOL_VISIBILITY_DEFAULT | WASM_SYMBOL_EXPORTED,
+      memoryGrowFunc);
+  WasmSym::memoryGrow->markLive();
+  WasmSym::memoryGrow->setExportNoWrap(true);
+
+  auto memorySizeFunc = make<SyntheticFunction>(memorySizeSignature, "__wasm_memory_size");
+  memorySizeFunc->setExportName("wasm_memory_size");
+  WasmSym::memorySize = symtab->addSyntheticFunction(
+      "__wasm_memory_size", WASM_SYMBOL_VISIBILITY_DEFAULT | WASM_SYMBOL_EXPORTED,
+      memorySizeFunc);
+  WasmSym::memorySize->markLive();
+  WasmSym::memorySize->setExportNoWrap(true);
 
   if (config->sharedMemory) {
     if (out.globalSec->needsTLSRelocations()) {
@@ -1190,6 +1213,36 @@ void Writer::createSyntheticInitFunctions() {
         make<SyntheticFunction>(nullSignature, "__wasm_start"));
     WasmSym::startFunction->markLive();
   }
+}
+
+void Writer::createMemoryGrowFunction() {
+  LLVM_DEBUG(dbgs() << "createMemoryGrowFunction\n");
+  assert(WasmSym::memoryGrow);
+  std::string bodyContent;
+  {
+    raw_string_ostream os(bodyContent);
+    writeUleb128(os, 0, "num locals");
+    writeU8(os, WASM_OPCODE_LOCAL_GET, "local.get");
+    writeUleb128(os, 0, "local 0");
+    writeU8(os, WASM_OPCODE_MEMORY_GROW, "memory grow");
+    writeUleb128(os, 0, "reserved memory byte");
+    writeU8(os, WASM_OPCODE_END, "END");
+  }
+  createFunction(WasmSym::memoryGrow, bodyContent);
+}
+
+void Writer::createMemorySizeFunction() {
+  LLVM_DEBUG(dbgs() << "createMemorySizeFunction\n");
+  assert(WasmSym::memorySize);
+  std::string bodyContent;
+  {
+    raw_string_ostream os(bodyContent);
+    writeUleb128(os, 0, "num locals");
+    writeU8(os, WASM_OPCODE_MEMORY_SIZE, "memory size");
+    writeUleb128(os, 0, "reserved memory byte");
+    writeU8(os, WASM_OPCODE_END, "END");
+  }
+  createFunction(WasmSym::memorySize, bodyContent);
 }
 
 void Writer::createInitMemoryFunction() {
@@ -1770,6 +1823,10 @@ void Writer::run() {
       createApplyGlobalTLSRelocationsFunction();
     if (WasmSym::initMemory)
       createInitMemoryFunction();
+    if (WasmSym::memoryGrow)
+      createMemoryGrowFunction();
+    if (WasmSym::memorySize)
+      createMemorySizeFunction();
     createStartFunction();
 
     createCallCtorsFunction();

@@ -223,6 +223,10 @@ public:
     return s->kind() == DefinedFunctionKind;
   }
 
+  // Get/set the exportNoWrap
+  void setExportNoWrap(bool v);
+  bool getExportNoWrap() const;
+
   // Get the function index to be used when exporting.  This only applies to
   // defined functions and can be differ from the regular function index for
   // weakly defined functions (that are imported and used via one index but
@@ -230,6 +234,8 @@ public:
   uint32_t getExportedFunctionIndex() const;
 
   InputFunction *function;
+protected:
+  bool exportNoWrap = false;
 };
 
 class UndefinedFunction : public FunctionSymbol {
@@ -594,6 +600,16 @@ struct WasmSym {
   // Pointer to the function that is to be used in the start section.
   // (normally an alias of initMemory, or applyGlobalRelocs).
   static DefinedFunction *startFunction;
+
+  // __wasm_memory_grow
+  // Function to perform memory grow within wasm, relieving engine
+  // APIs from performing this internally
+  static DefinedFunction *memoryGrow;
+
+  // __wasm_memory_size
+  // Function to perform memory size within wasm, relieving engine
+  // APIs from performing this internally
+  static DefinedFunction *memorySize;
 
   // __dso_handle
   // Symbol used in calls to __cxa_atexit to determine current DLL
