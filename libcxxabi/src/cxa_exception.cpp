@@ -34,6 +34,13 @@
 // | __cxa_dependent_exception | _Unwind_Exception CLNGC++\1 |
 // +---------------------------+-----------------------------+
 
+/** Placeholder for WALI Exceptions **/
+#include <stdio.h>
+_Unwind_Reason_Code _Unwind_RaiseException(_Unwind_Exception *exception_object) {
+  fprintf(stderr, "--------- RAISE EXCEPTION NOT SUPPORTED ----- \n");
+  return _URC_END_OF_STACK;
+}
+
 namespace __cxxabiv1 {
 
 //  Utility routines
