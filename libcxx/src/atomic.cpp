@@ -45,13 +45,13 @@ static void __libcpp_platform_wait_on_address(__cxx_atomic_contention_t const vo
                                               __cxx_contention_t __val)
 {
     static constexpr timespec __timeout = { 2, 0 };
-    syscall(SYS_futex, __ptr, FUTEX_WAIT_PRIVATE, __val, &__timeout, 0, 0);
+    syscall(SYS_futex, __ptr, FUTEX_PRIVATE | FUTEX_WAIT, __val, &__timeout, 0, 0);
 }
 
 static void __libcpp_platform_wake_by_address(__cxx_atomic_contention_t const volatile* __ptr,
                                               bool __notify_one)
 {
-    syscall(SYS_futex, __ptr, FUTEX_WAKE_PRIVATE, __notify_one ? 1 : INT_MAX, 0, 0, 0);
+    syscall(SYS_futex, __ptr, FUTEX_PRIVATE | FUTEX_WAKE, __notify_one ? 1 : INT_MAX, 0, 0, 0);
 }
 
 #elif defined(__APPLE__) && defined(_LIBCPP_USE_ULOCK)
