@@ -786,31 +786,33 @@ void Writer::createCommandExportWrappers() {
         toWrap.push_back(f);
 
   for (auto *f : toWrap) {
-    auto funcNameStr = (f->getName() + ".command_export").str();
-    commandExportWrapperNames.push_back(funcNameStr);
-    const std::string &funcName = commandExportWrapperNames.back();
+    if (!(f->getExportNoWrap())) { 
+      auto funcNameStr = (f->getName() + ".command_export").str();
+      commandExportWrapperNames.push_back(funcNameStr);
+      const std::string &funcName = commandExportWrapperNames.back();
 
-    auto func = make<SyntheticFunction>(*f->getSignature(), funcName);
-    if (f->function->getExportName())
-      func->setExportName(f->function->getExportName()->str());
-    else
-      func->setExportName(f->getName().str());
+      auto func = make<SyntheticFunction>(*f->getSignature(), funcName);
+      if (f->function->getExportName())
+        func->setExportName(f->function->getExportName()->str());
+      else
+        func->setExportName(f->getName().str());
 
-    DefinedFunction *def =
-        symtab->addSyntheticFunction(funcName, f->flags, func);
-    def->markLive();
+      DefinedFunction *def =
+          symtab->addSyntheticFunction(funcName, f->flags, func);
+      def->markLive();
 
-    def->flags |= WASM_SYMBOL_EXPORTED;
-    def->flags &= ~WASM_SYMBOL_VISIBILITY_HIDDEN;
-    def->forceExport = f->forceExport;
+      def->flags |= WASM_SYMBOL_EXPORTED;
+      def->flags &= ~WASM_SYMBOL_VISIBILITY_HIDDEN;
+      def->forceExport = f->forceExport;
 
-    f->flags |= WASM_SYMBOL_VISIBILITY_HIDDEN;
-    f->flags &= ~WASM_SYMBOL_EXPORTED;
-    f->forceExport = false;
+      f->flags |= WASM_SYMBOL_VISIBILITY_HIDDEN;
+      f->flags &= ~WASM_SYMBOL_EXPORTED;
+      f->forceExport = false;
 
-    out.functionSec->addFunction(func);
+      out.functionSec->addFunction(func);
 
-    createCommandExportWrapper(f->getFunctionIndex(), def);
+      createCommandExportWrapper(f->getFunctionIndex(), def);
+    }
   }
 }
 
@@ -1054,6 +1056,7 @@ void Writer::createSyntheticInitFunctions() {
       "__wasm_memory_grow", WASM_SYMBOL_VISIBILITY_DEFAULT | WASM_SYMBOL_EXPORTED,
       memoryGrowFunc);
   WasmSym::memoryGrow->markLive();
+  WasmSym::memoryGrow->setExportNoWrap(true);
 
   auto memorySizeFunc = make<SyntheticFunction>(memorySizeSignature, "__wasm_memory_size");
   memorySizeFunc->setExportName("wasm_memory_size");
@@ -1061,6 +1064,7 @@ void Writer::createSyntheticInitFunctions() {
       "__wasm_memory_size", WASM_SYMBOL_VISIBILITY_DEFAULT | WASM_SYMBOL_EXPORTED,
       memorySizeFunc);
   WasmSym::memorySize->markLive();
+  WasmSym::memorySize->setExportNoWrap(true);
 
   if (config->sharedMemory && out.globalSec->needsTLSRelocations()) {
     WasmSym::applyGlobalTLSRelocs = symtab->addSyntheticFunction(

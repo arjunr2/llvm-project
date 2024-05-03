@@ -219,6 +219,10 @@ public:
     return s->kind() == DefinedFunctionKind;
   }
 
+  // Get/set the exportNoWrap
+  void setExportNoWrap(bool v);
+  bool getExportNoWrap() const;
+
   // Get the function index to be used when exporting.  This only applies to
   // defined functions and can be differ from the regular function index for
   // weakly defined functions (that are imported and used via one index but
@@ -226,6 +230,8 @@ public:
   uint32_t getExportedFunctionIndex() const;
 
   InputFunction *function;
+protected:
+  bool exportNoWrap = false;
 };
 
 class UndefinedFunction : public FunctionSymbol {
