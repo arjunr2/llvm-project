@@ -234,6 +234,9 @@ aliasname:                                                                     \
 #define WEAK_ALIAS(name, aliasname)
 #define NO_EXEC_STACK_DIRECTIVE
 
+#elif defined(__wasm__)
+#define NO_EXEC_STACK_DIRECTIVE
+
 // clang-format on
 #else
 
