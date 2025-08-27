@@ -1153,7 +1153,7 @@ void Writer::createSyntheticInitFunctions() {
     }
   }
 
-  /* Add WALI convenience memory grow/size hook */
+  /* Add memory grow/size export hooks */
   auto memoryGrowFunc = make<SyntheticFunction>(memoryGrowSignature, "__wasm_memory_grow");
   memoryGrowFunc->setExportName("wasm_memory_grow");
   WasmSym::memoryGrow = symtab->addSyntheticFunction(

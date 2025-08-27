@@ -75,16 +75,24 @@ public:
     SuitableAlign = 128;
     LargeArrayMinWidth = 128;
     LargeArrayAlign = 128;
-    SigAtomicType = SignedInt;
-    LongAlign = LongWidth = 64;
     LongDoubleWidth = LongDoubleAlign = 128;
     LongDoubleFormat = &llvm::APFloat::IEEEquad();
     MaxAtomicPromoteWidth = MaxAtomicInlineWidth = 64;
-    // size_t being unsigned long for both wasm32 and wasm64 makes mangled names
-    // more consistent between the two.
-    SizeType = UnsignedInt;
-    PtrDiffType = SignedInt;
-    IntPtrType = SignedInt;
+    if (T.isWALI()) {
+      // WALI ABI requires 64-bit longs on both wasm32 and wasm64
+      LongAlign = LongWidth = 64;
+      SigAtomicType = SignedInt;
+      SizeType = UnsignedInt;
+      PtrDiffType = SignedInt;
+      IntPtrType = SignedInt;
+    } else {
+      SigAtomicType = SignedLong;
+      // size_t being unsigned long for both wasm32 and wasm64 makes mangled names
+      // more consistent between the two.
+      SizeType = UnsignedLong;
+      PtrDiffType = SignedLong;
+      IntPtrType = SignedLong;
+    }
   }
 
   StringRef getABI() const override;

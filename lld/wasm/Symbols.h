@@ -602,13 +602,13 @@ struct WasmSym {
   static DefinedFunction *startFunction;
 
   // __wasm_memory_grow
-  // Function to perform memory grow within wasm, relieving engine
-  // APIs from performing this internally
+  // Function to perform memory.grow. Serves as a hook to
+  // relieve engine APIs from performing this internally
   static DefinedFunction *memoryGrow;
 
   // __wasm_memory_size
-  // Function to perform memory size within wasm, relieving engine
-  // APIs from performing this internally
+  // Function to perform memory.size. Serves as a hook to
+  // relieve engine APIs from performing this internally
   static DefinedFunction *memorySize;
 
   // __dso_handle
