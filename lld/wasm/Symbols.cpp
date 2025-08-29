@@ -285,6 +285,10 @@ uint32_t DefinedFunction::getExportedFunctionIndex() const {
   return function->getFunctionIndex();
 }
 
+void DefinedFunction::setExportNoWrap(bool v) { exportNoWrap = v; }
+
+bool DefinedFunction::getExportNoWrap() const { return exportNoWrap; }
+
 uint64_t DefinedData::getVA(bool absolute) const {
   LLVM_DEBUG(dbgs() << "getVA: " << getName() << "\n");
   // TLS symbols (by default) are relative to the start of the TLS output

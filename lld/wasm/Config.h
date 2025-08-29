@@ -199,6 +199,16 @@ struct Ctx {
     // Function that initializes passive data segments during instantiation.
     DefinedFunction *initMemory;
 
+    // __wasm_memory_grow
+    // Function to perform memory.grow. Serves as a hook to
+    // relieve engine APIs from performing this internally
+    DefinedFunction *memoryGrow;
+
+    // __wasm_memory_size
+    // Function to perform memory.size. Serves as a hook to
+    // relieve engine APIs from performing this internally
+    DefinedFunction *memorySize;
+
     // __wasm_call_ctors
     // Function that directly calls all ctors in priority order.
     DefinedFunction *callCtors;
